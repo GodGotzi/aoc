@@ -57,21 +57,9 @@ impl Solution for Day02 {
                 let amount = amount.parse::<u32>().unwrap();
 
                 match cube_type {
-                    "red" => {
-                        if amount > max.0 {
-                            max.0 = amount;
-                        }
-                    }
-                    "green" => {
-                        if amount > max.1 {
-                            max.1 = amount;
-                        }
-                    }
-                    "blue" => {
-                        if amount > max.2 {
-                            max.2 = amount;
-                        }
-                    }
+                    "red" => max.0 = amount.max(max.0),
+                    "green" => max.1 = amount.max(max.1),
+                    "blue" => max.2 = amount.max(max.2),
                     _ => panic!("Unknown cube type: {}", cube_type),
                 };
             }
