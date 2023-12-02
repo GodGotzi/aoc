@@ -1,1 +1,0 @@
-C:\Users\Elias\Desktop\Projects\aoc2023\target\debug\aoc2023.exe: C:\Users\Elias\Desktop\Projects\aoc2023\src\api\mod.rs C:\Users\Elias\Desktop\Projects\aoc2023\src\days\day01.rs C:\Users\Elias\Desktop\Projects\aoc2023\src\days\day02.rs C:\Users\Elias\Desktop\Projects\aoc2023\src\days.rs C:\Users\Elias\Desktop\Projects\aoc2023\src\main.rs
