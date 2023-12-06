@@ -31,19 +31,13 @@ impl Solution for Day06 {
         let mut product = 1;
 
         for index in 0..time.len() {
-            let time = time[index];
-            let distance = distance[index];
-            let mut sum = 0;
+            let delta = time[index].pow(2) - 4 * distance[index];
+            let relative = (delta as f64).sqrt();
 
-            for i in 1..time {
-                let new_distance = i * (time - i);
+            let t1 = ((time[index] as f64 - relative) / 2.0).floor() as u64;
+            let t2 = ((time[index] as f64 + relative) / 2.0).ceil() as u64;
 
-                if new_distance > distance {
-                    sum += 1;
-                }
-            }
-
-            product *= sum;
+            product *= t2 - t1 - 1;
         }
 
         product.to_string()
@@ -74,16 +68,12 @@ impl Solution for Day06 {
             .parse::<u64>()
             .unwrap();
 
-        let mut sum: u64 = 0;
+        let delta = time.pow(2) - 4 * distance;
+        let relative = (delta as f64).sqrt();
 
-        for i in 1..time {
-            let new_distance = i * (time - i);
+        let t1 = ((time as f64 - relative) / 2.0).floor() as u64;
+        let t2 = ((time as f64 + relative) / 2.0).ceil() as u64;
 
-            if new_distance > distance {
-                sum += 1;
-            }
-        }
-
-        sum.to_string()
+        (t2 - t1 - 1).to_string()
     }
 }
