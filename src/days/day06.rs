@@ -60,7 +60,7 @@ impl Solution for Day06 {
             .filter(|s| !s.starts_with(' ') && !s.is_empty())
             .collect::<String>()
             .trim()
-            .parse::<u128>()
+            .parse::<u64>()
             .unwrap();
 
         let distance = lines[1]
@@ -71,12 +71,10 @@ impl Solution for Day06 {
             .filter(|s| !s.starts_with(' ') && !s.is_empty())
             .collect::<String>()
             .trim()
-            .parse::<u128>()
+            .parse::<u64>()
             .unwrap();
 
-        println!("{} {}", time, distance);
-
-        let mut sum: u128 = 0;
+        let mut sum: u64 = 0;
 
         for i in 1..time {
             let new_distance = i * (time - i);
