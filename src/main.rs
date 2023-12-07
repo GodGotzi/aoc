@@ -4,7 +4,7 @@ pub mod days;
 use api::Solution;
 
 fn main() {
-    let solutions: Vec<Box<dyn Solution>> = vec![Box::new(days::day06::Day06)];
+    let solutions: Vec<Box<dyn Solution>> = vec![Box::new(days::day07::Day07)];
 
     for solution in solutions {
         run_solution(&*solution);
