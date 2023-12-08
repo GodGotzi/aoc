@@ -19,13 +19,13 @@ static VALENCY: phf::Map<char, usize> = phf_map! {
 };
 
 enum Kind {
-    HighCard,
-    OnePair,
-    TwoPair,
-    Three,
-    FullHouse,
-    Four,
     Five,
+    Four,
+    FullHouse,
+    Three,
+    TwoPairs,
+    OnePair,
+    HighCard,
 }
 
 pub struct Day07;
@@ -50,7 +50,7 @@ impl Solution for Day07 {
             let kind_a = get_kind(&get_counts(hand_a));
             let kind_b = get_kind(&get_counts(hand_b));
 
-            let mut order = (kind_a as usize).cmp(&(kind_b as usize));
+            let mut order = (kind_b as usize).cmp(&(kind_a as usize));
 
             for i in 0..5 {
                 order = order.then(
@@ -80,7 +80,7 @@ impl Solution for Day07 {
             let kind_a = get_joker_kind(hand_a);
             let kind_b = get_joker_kind(hand_b);
 
-            let mut order = (kind_a as usize).cmp(&(kind_b as usize));
+            let mut order = (kind_b as usize).cmp(&(kind_a as usize));
 
             for i in 0..5 {
                 order = order.then(
@@ -98,6 +98,10 @@ impl Solution for Day07 {
 
 fn get_joker_kind(hand: &str) -> Kind {
     let mut counts = get_counts(&hand.replace('J', ""));
+    if counts.is_empty() {
+        return Kind::Five;
+    }
+
     counts[0] += hand.chars().filter(|card| *card == 'J').count();
 
     get_kind(&counts)
@@ -116,23 +120,29 @@ fn get_kind(counts: &[usize]) -> Kind {
         }
         2 => {
             if counts.len() == 3 {
-                Kind::TwoPair
+                Kind::TwoPairs
             } else {
                 Kind::OnePair
             }
         }
         1 => Kind::HighCard,
-        _ => panic!("Invalid count: {}", counts[counts.len() - 1]),
+        _ => panic!("Invalid count: {}", counts[0]),
     }
 }
 
 fn get_counts(hand: &str) -> Vec<usize> {
-    let mut counts = hand.chars().fold(vec![0; 13], |mut count, card| {
-        *count.get_mut(get_valency(card) - 1).unwrap() += 1;
-        count
-    });
-    counts.sort();
-    counts.reverse();
+    let mut counts = hand
+        .chars()
+        .fold(vec![0; 13], |mut count, card| {
+            *count.get_mut(get_valency(card) - 1).unwrap() += 1;
+            count
+        })
+        .iter()
+        .filter(|&count| *count > 0)
+        .copied()
+        .collect::<Vec<usize>>();
+
+    counts.sort_by(|a, b| b.cmp(a));
 
     counts
 }
