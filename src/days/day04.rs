@@ -71,12 +71,8 @@ impl Solution for Day04 {
             }
         }
 
-        let mut id = 0;
-
-        while id < cards.len() {
+        for id in 0..cards.len() {
             handle_card(&mut cards, id);
-
-            id += 1;
         }
 
         cards

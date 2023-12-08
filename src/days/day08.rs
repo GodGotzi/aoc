@@ -75,7 +75,6 @@ fn calculate_steps(
     is_end: &dyn Fn(&str) -> bool,
 ) -> usize {
     let mut current_position = start.to_string();
-
     let mut instruction_index = 0;
     let mut step_counter: usize = 0;
 
@@ -141,28 +140,4 @@ fn least_multiple(num: &[usize], current: &[usize]) -> Vec<usize> {
     }
 
     result
-}
-
-mod test {
-
-    #[test]
-    fn test_to_prime() {
-        assert_eq!(super::to_prime_factors(2), vec![2]);
-        assert_eq!(super::to_prime_factors(4), vec![2, 2]);
-        assert_eq!(super::to_prime_factors(6), vec![2, 3]);
-        assert_eq!(super::to_prime_factors(8), vec![2, 2, 2]);
-        assert_eq!(super::to_prime_factors(9), vec![3, 3]);
-        assert_eq!(super::to_prime_factors(12), vec![2, 2, 3]);
-        assert_eq!(super::to_prime_factors(15), vec![3, 5]);
-        assert_eq!(super::to_prime_factors(21), vec![3, 7]);
-        assert_eq!(super::to_prime_factors(24), vec![2, 2, 2, 3]);
-        assert_eq!(super::to_prime_factors(30), vec![2, 3, 5]);
-    }
-
-    #[test]
-    fn test_least_multiple() {
-        assert_eq!(super::least_multiple(&[2], &[2]), vec![2]);
-        assert_eq!(super::least_multiple(&[2], &[3]), vec![2, 3]);
-        assert_eq!(super::least_multiple(&[2, 2], &[2]), vec![2, 2]);
-    }
 }

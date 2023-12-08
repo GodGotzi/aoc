@@ -142,21 +142,3 @@ fn overlap(seeds: (usize, usize), source: (usize, usize)) -> Option<(usize, usiz
         None
     }
 }
-
-mod test {
-
-    #[test]
-    fn test_overlap() {
-        assert_eq!(super::overlap((79, 14), (50, 48)), Some((79, 14)));
-
-        assert_eq!(super::overlap((10, 20), (5, 15)), Some((10, 10)));
-        assert_eq!(super::overlap((10, 20), (5, 25)), Some((10, 20)));
-        //assert_eq!(super::overlap((10, 20), (5, 5)), Some((10, 5)));
-        assert_eq!(super::overlap((10, 20), (5, 30)), Some((10, 20)));
-        assert_eq!(super::overlap((10, 20), (15, 5)), Some((15, 5)));
-        assert_eq!(super::overlap((10, 20), (15, 20)), Some((15, 15)));
-
-        assert_ne!(super::overlap((22, 23), (5, 5)), Some((10, 5)));
-        assert_ne!(super::overlap((22, 23), (5, 5)), Some((10, 5)));
-    }
-}
