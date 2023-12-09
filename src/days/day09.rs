@@ -10,8 +10,6 @@ impl Solution for Day09 {
     fn part1(&self, input: String) -> String {
         let mut sum = 0;
 
-        //println!("hello {}", input);
-
         for line in input.lines() {
             let values = line
                 .split_whitespace()
@@ -26,8 +24,6 @@ impl Solution for Day09 {
 
     fn part2(&self, input: String) -> String {
         let mut sum = 0;
-
-        //println!("hello {}", input);
 
         for line in input.lines() {
             let values = line
