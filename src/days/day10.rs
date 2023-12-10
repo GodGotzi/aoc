@@ -1,41 +1,15 @@
 use phf::phf_map;
 
-use crate::api::Solution;
+use crate::api::{IVec2, Matrix2D, Solution};
 
 static PIPE_CONNECTIONS: phf::Map<char, [[i32; 2]; 2]> = phf_map! {
-    '|' => [[0, 1], [0, -1]],
-    '-' => [[1, 0], [-1, 0]],
-    'L' => [[0, -1], [1, 0]],
-    'J' => [[0, -1], [-1, 0]],
-    '7' => [[0, 1], [-1, 0]],
-    'F' => [[0, 1], [1, 0]]
+    '|' => [[1, 0], [-1, 0]],
+    '-' => [[0, 1], [0, -1]],
+    'L' => [[-1, 0], [0, 1]],
+    'J' => [[-1, 0], [0, -1]],
+    '7' => [[1, 0], [0, -1]],
+    'F' => [[1, 0], [0, 1]]
 };
-
-#[derive(Clone, Copy, Debug)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Direction {
-    fn row(&self) -> i32 {
-        match self {
-            Direction::Up => -1,
-            Direction::Down => 1,
-            _ => 0,
-        }
-    }
-
-    fn col(&self) -> i32 {
-        match self {
-            Direction::Left => -1,
-            Direction::Right => 1,
-            _ => 0,
-        }
-    }
-}
 
 pub struct Day10;
 
@@ -45,238 +19,175 @@ impl Solution for Day10 {
     }
 
     fn part1(&self, input: String) -> String {
-        let grid = input
+        let mut grid: Matrix2D<char> = input
             .lines()
             .map(|line| line.chars().collect::<Vec<char>>())
-            .collect::<Vec<Vec<char>>>();
+            .collect::<Vec<Vec<char>>>()
+            .into();
 
-        let visited: Vec<Vec<bool>> = vec![vec![false; grid[0].len()]; grid.len()];
+        let largest = get_largest_loop(&mut grid);
 
-        let start = find_start(&grid);
-
-        let mut queue: Vec<(usize, (usize, usize), Vec<Vec<bool>>)> =
-            vec![(0, (start.0, start.1), visited.clone())];
-
-        let mut finishes = Vec::new();
-
-        while let Some((counter, pos1, mut visited)) = queue.pop() {
-            visited[pos1.0][pos1.1] = true;
-
-            if grid[pos1.0][pos1.1] == 'S' && counter != 0 {
-                finishes.push(counter);
-            }
-
-            let directions = get_valid_neighbors(&grid, &visited, pos1);
-
-            for direction in directions {
-                let pos2 = (
-                    (pos1.0 as i32 + direction.row()) as usize,
-                    (pos1.1 as i32 + direction.col()) as usize,
-                );
-
-                if is_connected(grid[pos1.0][pos1.1], grid[pos2.0][pos2.1], direction)
-                    || (grid[pos2.0][pos2.1] == 'S' && counter > 1)
-                {
-                    queue.push((counter + 1, pos2, visited.clone()));
-                }
-            }
-        }
-
-        finishes.sort();
-
-        (finishes[finishes.len() - 1] / 2).to_string()
+        (largest.0 / 2).to_string()
     }
 
     fn part2(&self, input: String) -> String {
-        let mut grid = input
+        let mut grid: Matrix2D<char> = input
             .lines()
             .map(|line| line.chars().collect::<Vec<char>>())
-            .collect::<Vec<Vec<char>>>();
+            .collect::<Vec<Vec<char>>>()
+            .into();
 
-        let visited: Vec<Vec<bool>> = vec![vec![false; grid[0].len()]; grid.len()];
+        let (_loop_size, visited) = get_largest_loop(&mut grid);
 
-        let start = find_start(&grid);
-
-        let mut queue: Vec<(usize, (usize, usize), Vec<Vec<bool>>)> =
-            vec![(0, (start.0, start.1), visited.clone())];
-
-        let mut finished_visits = Vec::new();
-
-        while let Some((counter, pos1, mut visited)) = queue.pop() {
-            visited[pos1.0][pos1.1] = true;
-
-            if grid[pos1.0][pos1.1] == 'S' && counter != 0 {
-                finished_visits.push((counter, visited.clone()));
-            }
-
-            let directions = get_valid_neighbors(&grid, &visited, pos1);
-
-            for direction in directions {
-                let pos2 = (
-                    (pos1.0 as i32 + direction.row()) as usize,
-                    (pos1.1 as i32 + direction.col()) as usize,
-                );
-
-                if is_connected(grid[pos1.0][pos1.1], grid[pos2.0][pos2.1], direction)
-                    || (grid[pos2.0][pos2.1] == 'S' && counter > 1)
-                {
-                    queue.push((counter + 1, pos2, visited.clone()));
-                }
-            }
-        }
-
-        finished_visits
-            .sort_by(|(counter_a, _visited_a), (counter_b, _visited_b)| counter_b.cmp(counter_a));
-
-        for (row, rows) in finished_visits[0].1.iter().enumerate() {
-            for (col, value) in rows.iter().enumerate() {
-                if !*value {
-                    grid[row][col] = '.';
-                }
-            }
-        }
-
-        grid[start.0][start.1] = 'J';
-
-        println!("{:?}", grid[start.0][start.1]);
-
-        let ret = get_enclosed(&mut grid, &finished_visits[0].1).to_string();
-
-        ret.to_string()
+        get_enclosed(&grid, &visited).to_string()
     }
 }
 
-fn get_enclosed(grid: &mut [Vec<char>], visited: &[Vec<bool>]) -> usize {
+fn get_enclosed(grid: &Matrix2D<char>, visited: &Matrix2D<bool>) -> usize {
     let mut counter = 0;
-    let mut enclosed = Vec::new();
 
-    for (row_index, row) in grid.iter().enumerate() {
-        for (col_index, _value) in row.iter().enumerate() {
-            if !visited[row_index][col_index] {
-                let mut intersect_counter = 0;
-                let mut last = None;
+    grid.iter_enumerate().for_each(|(pos, _val)| {
+        if !visited.get(&(pos.0 as i32, pos.1 as i32)).unwrap_or(&true) {
+            let mut intersect_counter = 0;
+            let mut last = None;
 
-                for index in col_index + 1..row.len() {
-                    if grid[row_index][index] == '7' {
-                        if let Some(last) = last {
-                            if last == 'L' {
-                                intersect_counter += 1;
-                            }
+            for index in pos.1 + 1..grid.size().1 {
+                let value = grid.get(&(pos.0 as i32, index as i32)).unwrap();
+
+                if *value == '7' {
+                    if let Some(last) = last {
+                        if last == 'L' {
+                            intersect_counter += 1;
                         }
-                    } else if grid[row_index][index] == 'J' {
-                        if let Some(last) = last {
-                            if last == 'F' {
-                                intersect_counter += 1;
-                            }
-                        }
-                    } else if grid[row_index][index] == 'L' {
-                        last = Some('L');
-                    } else if grid[row_index][index] == 'F' {
-                        last = Some('F');
-                    } else if grid[row_index][index] == '|' {
-                        intersect_counter += 1;
                     }
-                }
-
-                if intersect_counter % 2 == 1 {
-                    enclosed.push((row_index, col_index));
-
-                    counter += 1;
+                } else if *value == 'J' {
+                    if let Some(last) = last {
+                        if last == 'F' {
+                            intersect_counter += 1;
+                        }
+                    }
+                } else if *value == 'L' {
+                    last = Some('L');
+                } else if *value == 'F' {
+                    last = Some('F');
+                } else if *value == '|' {
+                    intersect_counter += 1;
                 }
             }
-        }
-    }
 
-    for enclosed in enclosed.iter() {
-        grid[enclosed.0][enclosed.1] = 'I';
-    }
+            if intersect_counter % 2 == 1 {
+                counter += 1;
+            }
+        }
+    });
 
     counter
 }
 
-fn get_valid_neighbors(
-    grid: &[Vec<char>],
-    visited: &[Vec<bool>],
-    pos: (usize, usize),
-) -> Vec<Direction> {
-    let direction = [
-        Direction::Up,
-        Direction::Down,
-        Direction::Left,
-        Direction::Right,
-    ];
+fn get_largest_loop(grid: &mut Matrix2D<char>) -> (usize, Matrix2D<bool>) {
+    let start = grid
+        .iter_enumerate()
+        .find(|(_, value)| **value == 'S')
+        .unwrap()
+        .0;
 
-    let mut neighbors = Vec::new();
+    grid.set(
+        &(start.0 as i32, start.1 as i32),
+        get_start_replacement(grid, (start.0 as i32, start.1 as i32)),
+    );
 
-    for dir in direction {
-        let row = pos.0 as i32 + dir.row();
-        let col = pos.1 as i32 + dir.col();
+    let mut queue: Vec<(usize, IVec2, Matrix2D<bool>)> = vec![(
+        0,
+        (start.0 as i32, start.1 as i32),
+        Matrix2D::new(false, grid.size()),
+    )];
 
-        if row < 0 || col < 0 {
-            continue;
+    let mut largest: Option<(usize, Matrix2D<bool>)> = None;
+
+    while let Some((counter, pos1, mut visited)) = queue.pop() {
+        visited.set(&pos1, true);
+
+        if start == (pos1.0 as usize, pos1.1 as usize)
+            && counter > 0
+            && (largest.is_none() || counter > largest.as_ref().unwrap().0)
+        {
+            largest = Some((counter, visited.clone()));
         }
 
-        if let Some(rows) = grid.get(row as usize) {
-            if let Some(value) = rows.get(col as usize) {
-                if (*value != '.' && !visited[row as usize][col as usize]) || *value == 'S' {
-                    neighbors.push(dir);
+        let directions = vec![(1, 0), (-1, 0), (0, 1), (0, -1)];
+
+        for direction in directions {
+            let pos2 = (pos1.0 + direction.0, pos1.1 + direction.1);
+
+            if (!*visited.get(&pos2).unwrap_or(&true) && is_connected(grid, pos1, direction))
+                || start == (pos2.0 as usize, pos2.1 as usize)
+            {
+                queue.push((counter + 1, pos2, visited.clone()));
+            }
+        }
+    }
+
+    for (pos, value) in largest.as_ref().unwrap().1.iter_enumerate() {
+        if !*value {
+            grid.set(&(pos.0 as i32, pos.1 as i32), '.');
+        }
+    }
+
+    largest.unwrap()
+}
+
+fn get_start_replacement(grid: &Matrix2D<char>, (x, y): (i32, i32)) -> char {
+    let directions = vec![(1, 0), (-1, 0), (0, 1), (0, -1)];
+    let mut start_connections = Vec::new();
+
+    for direction in directions {
+        let pos = (x + direction.0, y + direction.1);
+
+        if let Some(value) = grid.get(&pos) {
+            if let Some(connections) = PIPE_CONNECTIONS.get(value) {
+                if connections[0] == [-direction.0, -direction.1] {
+                    start_connections.push(direction);
+                }
+
+                if connections[1] == [-direction.0, -direction.1] {
+                    start_connections.push(direction);
                 }
             }
         }
     }
 
-    neighbors
+    *PIPE_CONNECTIONS
+        .entries()
+        .find(|(_, connections)| {
+            (connections[0] == [start_connections[0].0, start_connections[0].1]
+                && connections[1] == [start_connections[1].0, start_connections[1].1])
+                || (connections[1] == [start_connections[0].0, start_connections[0].1]
+                    && connections[0] == [start_connections[1].0, start_connections[1].1])
+        })
+        .unwrap()
+        .0
 }
 
-fn is_connected(pipe1: char, pipe2: char, direction: Direction) -> bool {
-    match direction {
-        Direction::Up => {
-            if (pipe2 == '|' || pipe2 == 'F' || pipe2 == '7')
-                && (pipe1 == '|' || pipe1 == 'L' || pipe1 == 'J' || pipe1 == 'S')
-            {
-                return true;
-            }
+fn is_connected(
+    grid: &Matrix2D<char>,
+    (pos_x, pos_y): (i32, i32),
+    (dir_x, dir_y): (i32, i32),
+) -> bool {
+    let current = *grid.get(&(pos_x, pos_y)).unwrap();
+    let other = grid.get(&(pos_x + dir_x, pos_y + dir_y));
 
-            false
-        }
-        Direction::Down => {
-            if (pipe2 == '|' || pipe2 == 'L' || pipe2 == 'J')
-                && (pipe1 == '|' || pipe1 == 'F' || pipe1 == '7' || pipe1 == 'S')
-            {
-                return true;
-            }
-
-            false
-        }
-        Direction::Left => {
-            if (pipe2 == '-' || pipe2 == 'L' || pipe2 == 'F')
-                && (pipe1 == '-' || pipe1 == 'J' || pipe1 == '7' || pipe1 == 'S')
-            {
-                return true;
-            }
-
-            false
-        }
-        Direction::Right => {
-            if (pipe2 == '-' || pipe2 == 'J' || pipe2 == '7')
-                && (pipe1 == '-' || pipe1 == 'L' || pipe1 == 'F' || pipe1 == 'S')
-            {
-                return true;
-            }
-
-            false
-        }
-    }
-}
-
-fn find_start(grid: &[Vec<char>]) -> (usize, usize) {
-    for (row_index, row) in grid.iter().enumerate() {
-        for (col_index, col) in row.iter().enumerate() {
-            if *col == 'S' {
-                return (row_index, col_index);
-            }
-        }
+    if other.is_none() || other.unwrap() == &'.' {
+        return false;
     }
 
-    panic!("No start found");
+    let connections = PIPE_CONNECTIONS.get(&current).unwrap();
+    let other_connections = PIPE_CONNECTIONS.get(other.unwrap()).unwrap();
+
+    if (connections[0] == [dir_x, dir_y] || connections[1] == [dir_x, dir_y])
+        && (other_connections[0] == [-dir_x, -dir_y] || other_connections[1] == [-dir_x, -dir_y])
+    {
+        return true;
+    }
+
+    false
 }
