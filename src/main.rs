@@ -12,10 +12,12 @@ fn main() {
 }
 
 fn run_solution(solution: &dyn Solution) {
+    println!("Day {}:", solution.get_day());
+
+    let input = solution.load_input();
+
     let now = std::time::Instant::now();
 
-    println!("Day {}:", solution.get_day());
-    let input = solution.load_input();
     let part1 = solution.part1(input.clone());
     let time_part1 = now.elapsed();
 
