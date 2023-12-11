@@ -11,6 +11,7 @@ pub trait Solution {
 }
 
 pub type IVec2 = (i32, i32);
+pub type Vec2 = (u32, u32);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Matrix2D<T> {
@@ -59,6 +60,16 @@ impl<T: Clone> Matrix2D<T> {
             if let Some(old) = row.get_mut(*col as usize) {
                 *old = value.clone();
             }
+        }
+    }
+
+    pub fn insert_row(&mut self, row: usize, value: Vec<T>) {
+        self.data.insert(row, value);
+    }
+
+    pub fn insert_col(&mut self, col: usize, value: Vec<T>) {
+        for (row, value) in self.data.iter_mut().zip(value) {
+            row.insert(col, value);
         }
     }
 
