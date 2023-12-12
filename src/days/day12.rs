@@ -14,9 +14,11 @@ impl Solution for Day12 {
     fn part1(&self, input: String) -> String {
         let mut sum: usize = 0;
 
+        let mut cache: HashMap<(String, String), usize> = HashMap::new();
+
         for (spring, values) in input.lines().map(|line| {
             line.split_once(' ')
-                .map(|(springs, values)| (springs.chars().collect_vec(), values))
+                .map(|(springs, values)| (springs, values))
                 .unwrap()
         }) {
             let groups = values
@@ -24,7 +26,7 @@ impl Solution for Day12 {
                 .map(|s| s.parse::<usize>().unwrap())
                 .collect_vec();
 
-            let arrangements = check(spring.clone(), &groups, "".to_string(), 0, 0);
+            let arrangements = check(spring, &groups, &groups, "".to_string(), &mut cache);
 
             sum += arrangements;
         }
@@ -35,7 +37,7 @@ impl Solution for Day12 {
     fn part2(&self, input: String) -> String {
         let mut sum: usize = 0;
 
-        let cache: HashMap<String, usize> = HashMap::new();
+        let mut cache: HashMap<(String, String), usize> = HashMap::new();
 
         for (mut springs, values) in input.lines().map(|line| {
             line.split_once(' ')
@@ -54,7 +56,9 @@ impl Solution for Day12 {
             springs.extend_from_within(..);
             springs.extend_from_within(..n);
 
-            let arrangements = check(springs.clone(), &groups, "".to_string(), 0, 0);
+            let springs = springs.iter().join("");
+
+            let arrangements = check(&springs, &groups, &groups, "".to_string(), &mut cache);
 
             sum += arrangements;
         }
@@ -64,48 +68,79 @@ impl Solution for Day12 {
 }
 
 fn check(
-    mut spring: Vec<char>,
-    groups: &[usize],
+    spring: &str,
+    current_groups: &[usize],
+    all_groups: &[usize],
     mut buffer: String,
-    pos: usize,
-    group: usize,
+    cache: &mut HashMap<(String, String), usize>,
 ) -> usize {
-    if group == groups.len() || pos >= spring.len() {
-        return if is_valid(&buffer, groups) && !spring[pos..].contains(&'#') {
+    if let Some(value) = cache.get(&(spring.to_string(), current_groups.iter().join(","))) {
+        return *value;
+    }
+
+    if current_groups.is_empty() || spring.is_empty() {
+        return if is_valid(&buffer, all_groups) && !spring.contains('#') {
             1
         } else {
             0
         };
     }
 
-    if spring[pos] == '.' {
+    let first = spring.chars().next().unwrap();
+
+    if first == '.' {
         buffer.push('.');
 
-        check(spring, groups, buffer, pos + 1, group)
-    } else if spring[pos] == '?' {
-        spring[pos] = '#';
-        let check1 = check(spring.clone(), groups, buffer.clone(), pos, group);
+        let ret = check(&spring[1..], current_groups, all_groups, buffer, cache);
 
-        spring[pos] = '.';
-        let check2 = check(spring.clone(), groups, buffer.clone(), pos, group);
+        cache.insert(
+            (spring[1..].to_string(), current_groups.iter().join(",")),
+            ret,
+        );
 
-        return check1 + check2;
-    } else if get_range_length(&spring, pos, &['#', '?']) >= groups[group]
-        && get_range_length(&spring, pos, &['#']) <= groups[group]
+        ret
+    } else if first == '?' {
+        let mut str = spring.to_string();
+        str.replace_range(0..1, ".");
+
+        let working = check(&str, current_groups, all_groups, buffer.clone(), cache);
+
+        str.replace_range(0..1, "#");
+        let broken = check(&str, current_groups, all_groups, buffer.clone(), cache);
+
+        return working + broken;
+    } else if get_range_length(spring, &['#', '?']) >= current_groups[0]
+        && get_range_length(spring, &['#']) <= current_groups[0]
     {
-        buffer.push_str("#".repeat(groups[group]).as_str());
+        buffer.push_str("#".repeat(current_groups[0]).as_str());
 
-        return check(spring, groups, buffer, pos + groups[group], group + 1);
+        let ret = check(
+            &spring[current_groups[0]..],
+            &current_groups[1..],
+            all_groups,
+            buffer.clone(),
+            cache,
+        );
+
+        cache.insert(
+            (
+                spring[current_groups[0]..].to_string(),
+                current_groups[1..].iter().join(","),
+            ),
+            ret,
+        );
+
+        ret
     } else {
         return 0;
     }
 }
 
-fn get_range_length(spring: &[char], pos: usize, charackters: &[char]) -> usize {
+fn get_range_length(spring: &str, charackters: &[char]) -> usize {
     let mut length = 0;
 
-    for c in spring[pos..].iter() {
-        if charackters.contains(c) {
+    for c in spring.chars() {
+        if charackters.contains(&c) {
             length += 1;
         } else {
             break;
@@ -115,10 +150,10 @@ fn get_range_length(spring: &[char], pos: usize, charackters: &[char]) -> usize 
     length
 }
 
-fn is_valid(spring: &str, amounts: &[usize]) -> bool {
+fn is_valid(spring: &str, groups: &[usize]) -> bool {
     let mut temp = spring.to_string();
 
-    for amount in amounts.iter() {
+    for amount in groups.iter() {
         if let Some((offset, length)) = find_first_range(&temp, &['#']) {
             if *amount != length {
                 return false;
