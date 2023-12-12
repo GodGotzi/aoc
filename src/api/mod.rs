@@ -10,6 +10,22 @@ pub trait Solution {
     fn part2(&self, input: String) -> String;
 }
 
+pub trait IndexString {
+    fn index(&self, index: usize) -> char;
+}
+
+impl IndexString for String {
+    fn index(&self, index: usize) -> char {
+        self.chars().nth(index).unwrap()
+    }
+}
+
+impl IndexString for &str {
+    fn index(&self, index: usize) -> char {
+        self.chars().nth(index).unwrap()
+    }
+}
+
 pub type IVec2 = (i32, i32);
 pub type Vec2 = (u32, u32);
 

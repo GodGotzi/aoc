@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::api::{Matrix2D, Solution};
 
 pub struct Day11;
@@ -52,8 +54,6 @@ fn compute_distances(grid: &Matrix2D<char>, emptyness_multiplier: usize) -> usiz
     let mut sum = 0;
 
     for pair in pairs {
-        //println!("{:?}", pair);
-
         let mut queue: Vec<(usize, (usize, usize))> = vec![(0, pair[0])];
         let mut visited = vec![pair[0]];
 
@@ -105,19 +105,19 @@ fn distance(pos1: (usize, usize), pos2: (usize, usize)) -> f32 {
         .sqrt()
 }
 
-fn get_expanded_positions(grid: &Matrix2D<char>) -> (Vec<usize>, Vec<usize>) {
-    let mut rows = Vec::new();
-    let mut cols = Vec::new();
+fn get_expanded_positions(grid: &Matrix2D<char>) -> (HashSet<usize>, HashSet<usize>) {
+    let mut rows = HashSet::new();
+    let mut cols = HashSet::new();
 
     for row in 0..grid.rows() {
         if (0..grid.cols()).all(|col| *grid.get(&(row as i32, col as i32)).unwrap() != '#') {
-            rows.push(row);
+            rows.insert(row);
         }
     }
 
     for col in 0..grid.cols() {
         if (0..grid.rows()).all(|row| *grid.get(&(row as i32, col as i32)).unwrap() != '#') {
-            cols.push(col);
+            cols.insert(col);
         }
     }
 
