@@ -79,6 +79,36 @@ impl<T: Clone> Matrix2D<T> {
         }
     }
 
+    pub fn get_row(&self, row: usize) -> Option<&Vec<T>> {
+        self.data.get(row)
+    }
+
+    pub fn get_col(&self, col: usize) -> Option<Vec<&T>> {
+        self.data.iter().map(|row| row.get(col)).collect()
+    }
+
+    pub fn get_row_into_string(&self, row: usize) -> Option<String>
+    where
+        T: std::fmt::Display,
+    {
+        self.data
+            .get(row)
+            .map(|row| row.iter().map(|value| value.to_string()).collect())
+    }
+
+    pub fn get_col_into_string(&self, col: usize) -> Option<String>
+    where
+        T: std::fmt::Display + Clone,
+    {
+        Some(
+            self.data
+                .iter()
+                .map(|row| row[col].clone())
+                .map(|value| value.to_string())
+                .collect(),
+        )
+    }
+
     pub fn insert_row(&mut self, row: usize, value: Vec<T>) {
         self.data.insert(row, value);
     }
