@@ -5,7 +5,7 @@ use crate::api::Solution;
 #[derive(Debug, PartialEq, Eq)]
 enum Operation {
     Dash,
-    Equals(u8),
+    Equals(usize),
 }
 
 pub struct Day15;
@@ -31,7 +31,7 @@ impl Solution for Day15 {
             .map(|instruction| {
                 if instruction.contains('=') {
                     let (instruction, value) = instruction.split_once('=').unwrap();
-                    let value = value.parse::<u8>().unwrap();
+                    let value = value.parse::<usize>().unwrap();
 
                     (instruction, Operation::Equals(value))
                 } else {
@@ -42,7 +42,7 @@ impl Solution for Day15 {
             .collect_vec();
 
         let boxes = seq.iter().fold(
-            vec![Vec::<(&str, u8)>::new(); 256],
+            vec![Vec::<(&str, usize)>::new(); 256],
             |mut boxes, (instruction, operation)| {
                 let hash = hash(instruction);
 
@@ -61,7 +61,7 @@ impl Solution for Day15 {
                         .find(|(_, (inner, _))| inner == instruction)
                     {
                         boxes[hash].remove(index);
-                        boxes[hash].insert(0, (instruction, lens))
+                        boxes[hash].insert(index, (instruction, lens))
                     } else {
                         boxes[hash].push((instruction, lens))
                     }
@@ -77,7 +77,7 @@ impl Solution for Day15 {
             .map(|(box_index, b)| {
                 b.iter()
                     .enumerate()
-                    .map(|(index, (_, lens))| (box_index + 1) * (index + 1) * (*lens as usize))
+                    .map(|(index, (_, lens))| (box_index + 1) * (index + 1) * (*lens))
                     .sum::<usize>()
             })
             .sum::<usize>();
