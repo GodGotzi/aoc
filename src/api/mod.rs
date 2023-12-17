@@ -29,7 +29,7 @@ impl IndexString for &str {
 pub type IVec2 = (i32, i32);
 pub type Vec2 = (u32, u32);
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Matrix2D<T> {
     data: Vec<Vec<T>>,
 }
@@ -143,6 +143,15 @@ impl<T: Clone> Matrix2D<T> {
         self.data.iter().enumerate().flat_map(|(row, values)| {
             values
                 .iter()
+                .enumerate()
+                .map(move |(col, value)| ((row, col), value))
+        })
+    }
+
+    pub fn iter_enumerate_mut(&mut self) -> impl Iterator<Item = ((usize, usize), &mut T)> {
+        self.data.iter_mut().enumerate().flat_map(|(row, values)| {
+            values
+                .iter_mut()
                 .enumerate()
                 .map(move |(col, value)| ((row, col), value))
         })
