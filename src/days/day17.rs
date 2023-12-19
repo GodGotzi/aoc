@@ -70,7 +70,7 @@ fn solve(
         });
 
     let mut queue = Vec::new();
-    queue.push((0, heuristics.get(&start.position).unwrap(), start));
+    queue.push((0, *heuristics.get(&start.position).unwrap(), start));
 
     let mut visited: Vec<SearchState> = Vec::new();
 
@@ -96,7 +96,7 @@ fn solve(
                 new_state.straight += 1;
                 queue.push((
                     heat_loss + loss,
-                    heuristics.get(&state.position).unwrap(),
+                    *heuristics.get(&state.position).unwrap(),
                     new_state,
                 ));
             }
@@ -118,7 +118,7 @@ fn solve(
                     new_state.straight = 1;
                     queue.push((
                         heat_loss + loss,
-                        heuristics.get(&state.position).unwrap(),
+                        *heuristics.get(&state.position).unwrap(),
                         new_state,
                     ));
                 }
@@ -126,12 +126,12 @@ fn solve(
         }
 
         //println!("{:?}", queue);
-        queue.sort_by(|a, b| (b.1 + b.0).cmp(&(a.0 + a.1)));
+        queue.sort_by(|a, b| (b.1 + b.0).cmp(&(a.1 + a.0)));
     }
 
     None
 }
 
 fn manhattan_distance(a: (i32, i32), b: (i32, i32)) -> usize {
-    ((a.0 - b.0).pow(2) + (a.1 - b.1).pow(2)) as usize
+    ((a.0 - b.0).abs() + (a.1 - b.1).abs()) as usize
 }
